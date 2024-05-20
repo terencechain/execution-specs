@@ -103,3 +103,26 @@ class Receipt:
     cumulative_gas_used: Uint
     bloom: Bloom
     logs: Tuple[Log, ...]
+
+
+L1MessageType_L2Message = 3
+L1MessageType_EndOfBlock = 6
+L1MessageType_L2FundedByL1 = 7
+L1MessageType_RollupEvent = 8
+L1MessageType_SubmitRetryable = 9
+L1MessageType_BatchForGasEstimation = 10
+L1MessageType_Initialize = 11
+L1MessageType_EthDeposit = 12
+L1MessageType_BatchPostingReport = 13
+L1MessageType_Invalid = 0xFF
+
+
+@slotted_freezable
+@dataclass
+class l1_incoming_message_header:
+    kind: Uint
+    poster: Address
+    block_number: U64
+    timestamp: U64
+    request_id: Bytes
+    l1_base_fee: U256

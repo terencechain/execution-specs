@@ -46,6 +46,73 @@ class State:
     created_accounts: Set[Address] = field(default_factory=set)
 
 
+# The following account address in the arbos state is used to store the arbos related information.
+Arbos_state_address = "0xA4B05FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+
+# The following are keys used to store the arbos related information in the arbos state.
+version_offset, upgrade_version_offset, upgrade_timestamp_offset, network_fee_account_offset, chain_id_offset, genesis_block_num_offset, infra_fee_account_offset, brotli_compression_level_offset = range(8)
+
+# The following are subspace that used to differentiate the different types of info stored in the arbos state.
+# The new account address is claculated by cancatenating the arbos state address and the subspace then Keccak256 hash the result.
+l1_pricing_subspace = bytes([0])
+l2_pricing_subspace = bytes([1])
+retryables_subspace = bytes([2])
+address_table_subspace = bytes([3])
+chain_owner_subspace = bytes([4])
+send_merkle_subspace = bytes([5])
+blockhashes_subspace = bytes([6])
+chain_config_subspace = bytes([7])
+programs_subspace = bytes([8])
+
+# The following are keys used to store L1 pricing information in the arbos state.
+pay_rewards_to_offset, equilibration_units_offset, inertia_offset, per_unit_reward_offset, last_update_time_offset, funds_due_for_rewards_offset, units_since_offset, price_per_unit_offset, last_surplus_offset, per_batch_gas_cost_offset, amortized_cost_cap_bips_offset, l1_fees_available_offset = range(12)
+
+# The following are keys used to store L2 pricing information in the arbos state.
+speed_limit_per_second_offset, per_block_gas_limit_offset, base_fee_wei_offset, min_base_fee_wei_offset, gas_backlog_offset, pricing_inertia_offset, backlog_tolerance_offset = range(7)
+
+# The following are keys used to store retryables information in the arbos state.
+timeout_queue_key = bytes([0])
+calldata_key = bytes([1])
+
+ActivatedWasm = Dict[str, bytes]  # {'asm': bytes, 'module': bytes}
+UserWasms = Dict[str, ActivatedWasm]  # str is used to represent common.Hash
+RecentWasms = Dict[str, None]  # str is used to represent common.Hash
+
+@dataclass
+class ArbExtraData:
+    unexpected_balance_delta: Optional[int]
+    user_wasms: UserWasms
+    open_wasm_pages: int
+    ever_wasm_pages: int
+    activated_wasms: Dict[str, ActivatedWasm]
+    recent_wasms: RecentWasms
+
+@dataclass
+class ArbosState:
+    """
+    Contains all information that is preserved between ArbOS transactions.
+    """
+    arbos_version: int
+    max_arbos_version_supported: int
+    max_debug_arbos_version_supported: int
+    
+    _main_trie: Trie[Address, Optional[Account]] = field(
+        default_factory=lambda: Trie(secured=True, default=None)
+    )
+    _storage_tries: Dict[Address, Trie[Bytes, U256]] = field(
+        default_factory=dict
+    )
+    _snapshots: List[
+        Tuple[
+            Trie[Address, Optional[Account]], Dict[Address, Trie[Bytes, U256]]
+        ]
+    ] = field(default_factory=list)
+    _outbox_merkle_accumulator: Trie[Address, Optional[Account]] = field(
+        default_factory=lambda: Trie(secured=True, default=None)
+    )
+    created_accounts: Set[Address] = field(default_factory=set)
+    arbos_extra_data: ArbExtraData
+
 @dataclass
 class TransientStorage:
     """
